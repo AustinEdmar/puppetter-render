@@ -1,31 +1,28 @@
-// scrapeLogic.js
 const puppeteer = require("puppeteer");
-require("dotenv").config();
 
 const scrapeLogic = async (res) => {
+  console.log('Iniciando browser...');
+  
   const browser = await puppeteer.launch({
     headless: "new",
     args: [
       "--disable-setuid-sandbox",
       "--no-sandbox",
-      "--single-process",
-      "--no-zygote",
       "--disable-dev-shm-usage",
       "--disable-gpu",
-      "--no-first-run",
-      "--no-startup-window"
     ],
-    executablePath: '/usr/bin/google-chrome-stable',
-    ignoreDefaultArgs: ['--disable-extensions']
+    executablePath: '/usr/bin/google-chrome'
   });
   
   try {
+    console.log('Browser iniciado');
     const page = await browser.newPage();
-    console.log('Navegador iniciado com sucesso');
-    
+    console.log('Nova página criada');
+
+    console.log('Navegando para a página...');
     await page.goto("https://developer.chrome.com/");
-    console.log('Página carregada com sucesso');
-    
+    console.log('Navegação completa');
+
     await page.setViewport({ width: 1080, height: 1024 });
     
     await page.type(".search-box__input", "automate beyond recorder");
@@ -46,7 +43,10 @@ const scrapeLogic = async (res) => {
     console.error('Erro detalhado:', e);
     res.send(`Something went wrong while running Puppeteer: ${e}`);
   } finally {
-    await browser.close();
+    if (browser) {
+      await browser.close();
+      console.log('Browser fechado');
+    }
   }
 };
 
