@@ -1,21 +1,56 @@
-FROM node:19-slim
+# Dockerfile
+FROM ubuntu:focal
 
-# Instalar dependências necessárias
-RUN apt-get update \
-    && apt-get install -y wget gnupg \
-    && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
-    && apt-get update \
-    && apt-get install -y google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf libxss1 \
-    --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
+# Evitar interações durante a instalação de pacotes
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Definir variáveis de ambiente
+# Instalar Node.js e npm
+RUN apt-get update && apt-get install -y curl \
+    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
+
+# Instalar dependências do Chrome
+RUN apt-get update && apt-get install -y \
+    fonts-liberation \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libatspi2.0-0 \
+    libcairo2 \
+    libcups2 \
+    libdbus-1-3 \
+    libdrm2 \
+    libgbm1 \
+    libglib2.0-0 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libpango-1.0-0 \
+    libx11-6 \
+    libxcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxrandr2 \
+    wget \
+    xdg-utils \
+    --no-install-recommends
+
+# Baixar e instalar Chrome
+RUN wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+    && apt-get install -y ./google-chrome-stable_current_amd64.deb \
+    && rm google-chrome-stable_current_amd64.deb
+
+# Limpar cache do apt
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Configurar variáveis de ambiente
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
 
-# Criar diretório da aplicação
-WORKDIR /usr/src/app
+# Criar e configurar diretório da aplicação
+WORKDIR /app
 
 # Copiar package.json e package-lock.json
 COPY package*.json ./
@@ -23,11 +58,11 @@ COPY package*.json ./
 # Instalar dependências
 RUN npm ci
 
-# Copiar código fonte
+# Copiar resto dos arquivos
 COPY . .
 
 # Expor porta
 EXPOSE 4000
 
-# Comando para iniciar a aplicação
+# Iniciar aplicação
 CMD ["node", "index.js"]

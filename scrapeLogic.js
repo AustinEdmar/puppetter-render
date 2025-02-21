@@ -1,3 +1,4 @@
+// scrapeLogic.js
 const puppeteer = require("puppeteer");
 require("dotenv").config();
 
@@ -9,14 +10,22 @@ const scrapeLogic = async (res) => {
       "--no-sandbox",
       "--single-process",
       "--no-zygote",
-      "--disable-dev-shm-usage"
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--no-first-run",
+      "--no-startup-window"
     ],
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable',
+    executablePath: '/usr/bin/google-chrome-stable',
+    ignoreDefaultArgs: ['--disable-extensions']
   });
   
   try {
     const page = await browser.newPage();
+    console.log('Navegador iniciado com sucesso');
+    
     await page.goto("https://developer.chrome.com/");
+    console.log('Página carregada com sucesso');
+    
     await page.setViewport({ width: 1080, height: 1024 });
     
     await page.type(".search-box__input", "automate beyond recorder");
@@ -34,7 +43,7 @@ const scrapeLogic = async (res) => {
     console.log(logStatement);
     res.send(logStatement);
   } catch (e) {
-    console.error(e);
+    console.error('Erro detalhado:', e);
     res.send(`Something went wrong while running Puppeteer: ${e}`);
   } finally {
     await browser.close();
